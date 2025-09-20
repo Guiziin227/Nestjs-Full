@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { Roles } from 'generated/prisma';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -25,12 +26,24 @@ export class AuthGuard implements CanActivate {
     }
 
     try {
-      const payload = await this.jwtService.verify(token, {
+      const payload = await this.jwtService.verify<{
+        name: string;
+        email: string;
+        role: Roles;
+        sub: string;
+      }>(token, {
         algorithms: ['HS256'],
       });
-      request['user'] = this.prisma.user.findUnique({
-        where: { email: payload.email },
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
       });
+
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      request.user = user;
+      return true;
     } catch (err) {
       console.error(err);
       throw new UnauthorizedException('Invalid token', { cause: err });
