@@ -1,15 +1,31 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { PostsService } from './posts.service';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import type { Request } from 'express';
+import { AuthGuard } from 'src/auth/auth.guard';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { PostsService } from './posts.service';
 
+@UseGuards(AuthGuard)
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Post()
-  create(@Body() createPostDto: CreatePostDto) {
-    return this.postsService.create(createPostDto);
+  create(@Body() createPostDto: CreatePostDto, @Req() req: Request) {
+    return this.postsService.create({
+      ...createPostDto,
+      authorId: req.user!.id,
+    });
   }
 
   @Get()
@@ -19,16 +35,16 @@ export class PostsController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.postsService.findOne(+id);
+    return this.postsService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto) {
-    return this.postsService.update(+id, updatePostDto);
+    return this.postsService.update(id, updatePostDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.postsService.remove(+id);
+    return this.postsService.remove(id);
   }
 }
