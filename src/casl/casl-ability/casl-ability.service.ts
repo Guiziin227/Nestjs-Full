@@ -1,6 +1,6 @@
 import { AbilityBuilder, PureAbility } from '@casl/ability';
 import { createPrismaAbility, Subjects } from '@casl/prisma';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Scope } from '@nestjs/common';
 import { Post, Roles, User } from 'generated/prisma';
 
 export type PermAction = 'manage' | 'create' | 'read' | 'update' | 'delete';
@@ -30,10 +30,11 @@ const rolePermissionsMap: Record<Roles, DefinePermissions> = {
     can('create', 'Post');
     can('read', 'Post');
     can('update', 'Post', { authorId: user.id });
+    can('read', 'User', { id: user.id });
   },
 };
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class CaslAbilityService {
   ability: AppAbility;
 
