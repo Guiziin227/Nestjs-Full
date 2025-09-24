@@ -1,14 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CaslAbilityService } from '../casl/casl-ability/casl-ability.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private abilityService: CaslAbilityService) {}
 
   create(createUserDto: CreateUserDto) {
+
+    const ability = this.abilityService.ability
+
+    if(!ability.can('create', 'User')){
+      throw new UnauthorizedException('Unauthorized to create user')
+    }
+
     return this.prisma.user.create({
       data: {
         ...createUserDto,
@@ -18,6 +26,13 @@ export class UsersService {
   }
 
   findAll() {
+
+    const ability = this.abilityService.ability
+
+    if(!ability.can('read', 'User')){
+      throw new UnauthorizedException('Unauthorized to read users')
+    }
+
     return this.prisma.user.findMany();
   }
 
