@@ -45,14 +45,38 @@ export class PostsService {
     });
   }
 
-  update(id: string, updatePostDto: UpdatePostDto) {
+  async update(id: string, updatePostDto: UpdatePostDto) {
+
+    const ability = this.abilityService.ability
+    const post = await this.prisma.post.findUnique({
+      where: { id,
+        AND: [accessibleBy(ability, 'update').Post]
+      },
+    });
+
+    if(!post){
+      throw new Error('Unauthorized to update post')
+    }
+
     return this.prisma.post.update({
       where: { id },
       data: updatePostDto,
     });
   }
 
-  remove(id: string) {
+  async remove(id: string) {
+
+    const ability = this.abilityService.ability
+    const post = await this.prisma.post.findUnique({
+      where: { id,
+        AND: [accessibleBy(ability, 'delete').Post]
+      },
+    });
+
+    if(!post){
+      throw new Error('Unauthorized to update post')
+    }
+
     return this.prisma.post.delete({
       where: { id },
     });
