@@ -28,7 +28,7 @@ const rolePermissionsMap: Record<Roles, DefinePermissions> = {
   },
   WRITER: (user, { can }) => {
     can('create', 'Post');
-    can('read', 'Post');
+    can('read', 'Post', { authorId: user.id });
     can('update', 'Post', { authorId: user.id });
   },
 };
